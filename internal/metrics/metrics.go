@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
@@ -41,6 +42,10 @@ type Metrics struct {
 
 	lookbackWindow uint32
 	rpcPerPage     uint32
+
+	refreshing  *sync.Mutex
+	peakLock    *sync.Mutex
+	highestPeak uint32
 }
 
 // NewMetrics returns a new metrics instance
@@ -58,6 +63,8 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 		prometheusMetrics: &prometheusMetrics{},
 		lookbackWindow:    uint32(lookbackWindow),
 		rpcPerPage:        uint32(rpcPerPage),
+		refreshing:        &sync.Mutex{},
+		peakLock:          &sync.Mutex{},
 	}
 
 	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{

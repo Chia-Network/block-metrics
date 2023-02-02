@@ -167,7 +167,23 @@ func (m *Metrics) saveBlock(block types.FullBlock) error {
 
 // refreshMetrics updates the metrics using the provided peak height as a starting point to look back from
 func (m *Metrics) refreshMetrics(peakHeight uint32) {
-	// @TODO need a lock for actually processing this, so we only do one at a time (and if there's a queue, just let the latest one be the one waiting always)
+	// Update the highest block we've seen, if this is larger
+	m.peakLock.Lock()
+	if peakHeight <= m.highestPeak {
+		return
+	}
+	m.highestPeak = peakHeight
+	m.peakLock.Unlock()
+
+	// Now wait until nothing else is refreshing metrics
+	m.refreshing.Lock()
+	defer m.refreshing.Unlock()
+
+	// Now that we can process the metrics, one last check to make sure its still the highest peak we've seen
+	if peakHeight < m.highestPeak {
+		return
+	}
+
 	err := m.FillBlockGaps()
 	if err != nil {
 		log.Errorf("error backfilling gaps: %s\n", err.Error())
