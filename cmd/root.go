@@ -30,17 +30,29 @@ func Execute() {
 }
 
 func init() {
+	var (
+		lookbackWindow int
+		rpcPerPage     int
+
+		dbHost string
+		dbPort int
+		dbName string
+	)
+
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.block-metrics.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().IntVar(&lookbackWindow, "lookback-window", 32256, "How many blocks to look at when determining metrics such as nakamoto coefficient")
+	rootCmd.PersistentFlags().IntVar(&rpcPerPage, "rpc-per-page", 250, "How many results to fetch in each RPC call")
+	rootCmd.PersistentFlags().StringVar(&dbHost, "db-host", "127.0.0.1", "Host or IP address of the DB instance to connect to")
+	rootCmd.PersistentFlags().IntVar(&dbPort, "db-port", 3306, "Port of the database")
+	rootCmd.PersistentFlags().StringVar(&dbName, "db-name", "blocks", "The name of the database to connect to")
+
+	cobra.CheckErr(viper.BindPFlag("lookback-window", rootCmd.PersistentFlags().Lookup("lookback-window")))
+	cobra.CheckErr(viper.BindPFlag("rpc-per-page", rootCmd.PersistentFlags().Lookup("rpc-per-page")))
+	cobra.CheckErr(viper.BindPFlag("db-host", rootCmd.PersistentFlags().Lookup("db-host")))
+	cobra.CheckErr(viper.BindPFlag("db-port", rootCmd.PersistentFlags().Lookup("db-port")))
+	cobra.CheckErr(viper.BindPFlag("db-name", rootCmd.PersistentFlags().Lookup("db-name")))
 }
 
 // initConfig reads in config file and ENV variables if set.
