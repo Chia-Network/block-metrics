@@ -30,20 +30,25 @@ type Metrics struct {
 
 	// This holds a custom prometheus registry so that only our metrics are exported, and not the default go metrics
 	registry *prometheus.Registry
+
+	lookbackWindow int
+	rpcPerPage     uint32
 }
 
 // NewMetrics returns a new metrics instance
-func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string, dbPass string, dbName string) (*Metrics, error) {
+func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string, dbPass string, dbName string, lookbackWindow int, rpcPerPage int) (*Metrics, error) {
 	var err error
 
 	metrics := &Metrics{
-		exporterPort: exporterPort,
-		dbHost:       dbHost,
-		dbPort:       dbPort,
-		dbUser:       dbUser,
-		dbPass:       dbPass,
-		dbName:       dbName,
-		registry:     prometheus.NewRegistry(),
+		exporterPort:   exporterPort,
+		dbHost:         dbHost,
+		dbPort:         dbPort,
+		dbUser:         dbUser,
+		dbPass:         dbPass,
+		dbName:         dbName,
+		registry:       prometheus.NewRegistry(),
+		lookbackWindow: lookbackWindow,
+		rpcPerPage:     uint32(rpcPerPage),
 	}
 
 	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
@@ -63,6 +68,11 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 	}
 
 	err = metrics.createDBClient()
+	if err != nil {
+		return nil, err
+	}
+
+	err = metrics.initTables()
 	if err != nil {
 		return nil, err
 	}
