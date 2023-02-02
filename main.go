@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/chia-network/block-metrics/cmd"
+import (
+	"github.com/chia-network/block-metrics/cmd"
+)
 
 func main() {
 	cmd.Execute()

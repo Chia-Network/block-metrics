@@ -16,6 +16,8 @@ import (
 // prometheusMetrics is the struct with metrics that holds the actual prometheus metric objects
 type prometheusMetrics struct {
 	nakamotoCoefficient50 *wrappedPrometheus.LazyGauge
+	nakamotoCoefficient51 *wrappedPrometheus.LazyGauge
+	blockHeight           *wrappedPrometheus.LazyGauge
 }
 
 // Metrics deals with the block db and metrics
@@ -37,7 +39,7 @@ type Metrics struct {
 	registry          *prometheus.Registry
 	prometheusMetrics *prometheusMetrics
 
-	lookbackWindow int
+	lookbackWindow uint32
 	rpcPerPage     uint32
 }
 
@@ -54,7 +56,7 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 		dbName:            dbName,
 		registry:          prometheus.NewRegistry(),
 		prometheusMetrics: &prometheusMetrics{},
-		lookbackWindow:    lookbackWindow,
+		lookbackWindow:    uint32(lookbackWindow),
 		rpcPerPage:        uint32(rpcPerPage),
 	}
 
@@ -113,8 +115,8 @@ func (m *Metrics) createDBClient() error {
 
 func (m *Metrics) initMetrics() {
 	m.prometheusMetrics.nakamotoCoefficient50 = m.newGauge("nakamoto_coefficient_gt50", "Nakamoto coefficient when we calculate for >50% of nodes")
-	m.newGauge("nakamoto_coefficient_gt51", "Nakamoto coefficient when we calculate for >51% of nodes")
-	m.newGauge("block_height", "Block height for current set of metrics")
+	m.prometheusMetrics.nakamotoCoefficient51 = m.newGauge("nakamoto_coefficient_gt51", "Nakamoto coefficient when we calculate for >51% of nodes")
+	m.prometheusMetrics.blockHeight = m.newGauge("block_height", "Block height for current set of metrics")
 }
 
 // newGauge returns a lazy gauge that follows naming conventions

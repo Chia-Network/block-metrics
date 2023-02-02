@@ -8,7 +8,7 @@ func (m *Metrics) initTables() error {
 		"  `farmer_puzzle_hash` varchar(255) DEFAULT NULL," +
 		"  `farmer_address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL," +
 		"  PRIMARY KEY (`id`)" +
-		") ENGINE=InnoDB AUTO_INCREMENT=65515 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;"
 
 	result, err := m.mysqlClient.Query(query)
 	if err != nil {
