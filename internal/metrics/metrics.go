@@ -13,6 +13,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+// prometheusMetrics is the struct with metrics that holds the actual prometheus metric objects
+type prometheusMetrics struct {
+	nakamotoCoefficient50 *wrappedPrometheus.LazyGauge
+}
+
 // Metrics deals with the block db and metrics
 type Metrics struct {
 	exporterPort uint16
@@ -29,7 +34,8 @@ type Metrics struct {
 	mysqlClient *sql.DB
 
 	// This holds a custom prometheus registry so that only our metrics are exported, and not the default go metrics
-	registry *prometheus.Registry
+	registry          *prometheus.Registry
+	prometheusMetrics *prometheusMetrics
 
 	lookbackWindow int
 	rpcPerPage     uint32
@@ -40,15 +46,16 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 	var err error
 
 	metrics := &Metrics{
-		exporterPort:   exporterPort,
-		dbHost:         dbHost,
-		dbPort:         dbPort,
-		dbUser:         dbUser,
-		dbPass:         dbPass,
-		dbName:         dbName,
-		registry:       prometheus.NewRegistry(),
-		lookbackWindow: lookbackWindow,
-		rpcPerPage:     uint32(rpcPerPage),
+		exporterPort:      exporterPort,
+		dbHost:            dbHost,
+		dbPort:            dbPort,
+		dbUser:            dbUser,
+		dbPass:            dbPass,
+		dbName:            dbName,
+		registry:          prometheus.NewRegistry(),
+		prometheusMetrics: &prometheusMetrics{},
+		lookbackWindow:    lookbackWindow,
+		rpcPerPage:        uint32(rpcPerPage),
 	}
 
 	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
@@ -105,7 +112,7 @@ func (m *Metrics) createDBClient() error {
 }
 
 func (m *Metrics) initMetrics() {
-	m.newGauge("nakamoto_coefficient_gt50", "Nakamoto coefficient when we calculate for >50% of nodes")
+	m.prometheusMetrics.nakamotoCoefficient50 = m.newGauge("nakamoto_coefficient_gt50", "Nakamoto coefficient when we calculate for >50% of nodes")
 	m.newGauge("nakamoto_coefficient_gt51", "Nakamoto coefficient when we calculate for >51% of nodes")
 	m.newGauge("block_height", "Block height for current set of metrics")
 }

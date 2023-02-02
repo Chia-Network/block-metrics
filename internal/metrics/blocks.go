@@ -1,12 +1,14 @@
 package metrics
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
+	"github.com/chia-network/go-chia-libs/pkg/types"
 	"github.com/schollz/progressbar/v3"
+	log "github.com/sirupsen/logrus"
 )
 
 // BackfillBlocks loads all the blocks from the chia full node and stores the relevant data into the metrics DB
@@ -42,14 +44,7 @@ func (m *Metrics) BackfillBlocks() error {
 		}
 
 		for _, block := range blocks.Blocks.MustGet() {
-			blockHeight := block.RewardChainBlock.Height
-			farmerPuzzHash := block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash.String()
-			farmerAddress, _ := bech32m.EncodePuzzleHash(block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash, "xch")
-			insert, err := m.mysqlClient.Query("INSERT INTO blocks (height, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?)", blockHeight, farmerPuzzHash, farmerAddress)
-			if err != nil {
-				return err
-			}
-			err = insert.Close()
+			err = m.saveBlock(block)
 			if err != nil {
 				return err
 			}
@@ -65,6 +60,54 @@ func (m *Metrics) BackfillBlocks() error {
 		}
 		start = start + m.rpcPerPage
 		end = end + m.rpcPerPage
+	}
+
+	return nil
+}
+
+// receiveBlock is the callback when we receive a block via a websocket subscription
+func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
+	block := &types.BlockEvent{}
+	err := json.Unmarshal(resp.Data, block)
+	if err != nil {
+		log.Errorf("Error unmarshalling: %s\n", err.Error())
+		return
+	}
+
+	if block.ReceiveBlockResult.OrElse(types.ReceiveBlockResultInvalidBlock) == types.ReceiveBlockResultNewPeak {
+		log.Printf("Received block %d\n", block.Height)
+
+		// The block event doesn't actually have the full block record, so grab it from the RPC
+		result, _, err := m.httpClient.FullNodeService.GetBlockByHeight(&rpc.GetBlockByHeightOptions{BlockHeight: int(block.Height)})
+		if err != nil {
+			log.Errorf("Error getting block in response to webhook: %s\n", err.Error())
+			return
+		}
+
+		if result.Block.IsAbsent() {
+			log.Errorf("Block was not present in the response")
+			return
+		}
+
+		err = m.saveBlock(result.Block.MustGet())
+		if err != nil {
+			log.Errorf("Error saving block: %s\n", err.Error())
+			return
+		}
+	}
+}
+
+func (m *Metrics) saveBlock(block types.FullBlock) error {
+	blockHeight := block.RewardChainBlock.Height
+	farmerPuzzHash := block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash.String()
+	farmerAddress, _ := bech32m.EncodePuzzleHash(block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash, "xch")
+	insert, err := m.mysqlClient.Query("INSERT INTO blocks (height, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?)", blockHeight, farmerPuzzHash, farmerAddress)
+	if err != nil {
+		return err
+	}
+	err = insert.Close()
+	if err != nil {
+		return err
 	}
 
 	return nil
