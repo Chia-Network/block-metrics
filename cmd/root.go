@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/chia-network/block-metrics/internal/metrics"
 )
 
 var cfgFile string
@@ -30,17 +32,42 @@ func Execute() {
 }
 
 func init() {
+	var (
+		lookbackWindow int
+		rpcPerPage     int
+		chiaHostname   string
+		metricsPort    int
+
+		dbHost string
+		dbPort int
+		dbUser string
+		dbPass string
+		dbName string
+	)
+
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.block-metrics.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().IntVar(&lookbackWindow, "lookback-window", 32256, "How many blocks to look at when determining metrics such as nakamoto coefficient")
+	rootCmd.PersistentFlags().IntVar(&rpcPerPage, "rpc-per-page", 250, "How many results to fetch in each RPC call")
+	rootCmd.PersistentFlags().StringVar(&chiaHostname, "chia-hostname", "localhost", "The hostname to use when connecting to chia")
+	// We'll just use 9914 (same as chia-exporter) for now as a default, since they likely won't run on the same hosts
+	rootCmd.PersistentFlags().IntVar(&metricsPort, "metrics-port", 9914, "The port the metrics server binds to")
+	rootCmd.PersistentFlags().StringVar(&dbHost, "db-host", "127.0.0.1", "Host or IP address of the DB instance to connect to")
+	rootCmd.PersistentFlags().IntVar(&dbPort, "db-port", 3306, "Port of the database")
+	rootCmd.PersistentFlags().StringVar(&dbUser, "db-user", "root", "The username to use when connecting to the DB")
+	rootCmd.PersistentFlags().StringVar(&dbPass, "db-pass", "password", "The password to use when connecting to the DB")
+	rootCmd.PersistentFlags().StringVar(&dbName, "db-name", "blocks", "The name of the database to connect to")
+
+	cobra.CheckErr(viper.BindPFlag("lookback-window", rootCmd.PersistentFlags().Lookup("lookback-window")))
+	cobra.CheckErr(viper.BindPFlag("rpc-per-page", rootCmd.PersistentFlags().Lookup("rpc-per-page")))
+	cobra.CheckErr(viper.BindPFlag("chia-hostname", rootCmd.PersistentFlags().Lookup("chia-hostname")))
+	cobra.CheckErr(viper.BindPFlag("metrics-port", rootCmd.PersistentFlags().Lookup("metrics-port")))
+	cobra.CheckErr(viper.BindPFlag("db-host", rootCmd.PersistentFlags().Lookup("db-host")))
+	cobra.CheckErr(viper.BindPFlag("db-port", rootCmd.PersistentFlags().Lookup("db-port")))
+	cobra.CheckErr(viper.BindPFlag("db-user", rootCmd.PersistentFlags().Lookup("db-user")))
+	cobra.CheckErr(viper.BindPFlag("db-pass", rootCmd.PersistentFlags().Lookup("db-pass")))
+	cobra.CheckErr(viper.BindPFlag("db-name", rootCmd.PersistentFlags().Lookup("db-name")))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -67,4 +94,20 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+// newMetsHelper returns a new metrics instance pre-filled with config values from Viper
+func newMetsHelper() *metrics.Metrics {
+	mets, err := metrics.NewMetrics(
+		uint16(viper.GetInt("metrics-port")),
+		viper.GetString("db-host"),
+		uint16(viper.GetInt("db-port")),
+		viper.GetString("db-user"),
+		viper.GetString("db-pass"),
+		viper.GetString("db-name"),
+		viper.GetInt("lookback-window"),
+		viper.GetInt("rpc-per-page"),
+	)
+	cobra.CheckErr(err)
+	return mets
 }
