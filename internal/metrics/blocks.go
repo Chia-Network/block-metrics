@@ -22,13 +22,13 @@ func (m *Metrics) BackfillBlocks() error {
 	}
 
 	height := state.BlockchainState.MustGet().Peak.MustGet().Height
-	start := uint32(0)
-	end := m.rpcPerPage
+	start := height - m.rpcPerPage
+	end := height
 
 	bar := progressbar.Default(int64(height))
 	for {
-		if end > height {
-			end = height
+		if start < 0 {
+			start = 0
 		}
 		blocks, _, err := m.httpClient.FullNodeService.GetBlocks(&rpc.GetBlocksOptions{
 			Start: int(start),
@@ -53,13 +53,13 @@ func (m *Metrics) BackfillBlocks() error {
 		err = bar.Add(int(m.rpcPerPage))
 		_ = err // Just the progress bar, so it's not critical
 
-		if end >= height {
+		if start <= 0 {
 			err = bar.Finish()
 			_ = err // Just the progress bar, so it's not critical
 			break
 		}
-		start = start + m.rpcPerPage
-		end = end + m.rpcPerPage
+		start = start - m.rpcPerPage
+		end = end - m.rpcPerPage
 	}
 
 	return nil
