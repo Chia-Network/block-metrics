@@ -3,7 +3,7 @@ module github.com/chia-network/block-metrics
 go 1.19
 
 require (
-	github.com/chia-network/go-chia-libs v0.2.2
+	github.com/chia-network/go-chia-libs v0.2.3-0.20230203222132-126f269ba813
 	github.com/chia-network/go-modules v0.0.3
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/prometheus/client_golang v1.14.0

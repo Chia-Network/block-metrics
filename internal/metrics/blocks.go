@@ -71,8 +71,9 @@ func (m *Metrics) BackfillBlocks() error {
 
 func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
 	blocks, _, err := m.httpClient.FullNodeService.GetBlocks(&rpc.GetBlocksOptions{
-		Start: int(start),
-		End:   int(end),
+		Start:          int(start),
+		End:            int(end),
+		ExcludeReorged: true,
 	})
 	if err != nil {
 		return err
