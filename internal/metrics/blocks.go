@@ -47,10 +47,15 @@ func (m *Metrics) BackfillBlocks() error {
 			start = start - m.rpcPerPage
 		}
 		end = end - m.rpcPerPage
+
+		// Fills any missing timestamps
+		err = m.FillTimestampGaps()
+		if err != nil {
+			return err
+		}
 	}
 
-	// Fills any missing timestamps
-	return m.FillTimestampGaps()
+	return nil
 }
 
 func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
@@ -317,23 +322,13 @@ func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 	// 4: thresholdPercent
 	lookbackWindowPercent := m.lookbackWindow / 100
 	minHeight := peakHeight - m.lookbackWindow + 1
-	rows, err := m.mysqlClient.Query(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, thresholdPercent)
-	if err != nil {
-		return 0, err
-	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			log.Errorf("Could not close rows: %s\n", err.Error())
-		}
-	}(rows)
+	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, thresholdPercent)
 
 	var (
 		number            int
 		cumulativePercent float64
 	)
-	rows.Next()
-	err = rows.Scan(&number, &cumulativePercent)
+	err := row.Scan(&number, &cumulativePercent)
 	if err != nil {
 		return 0, err
 	}
