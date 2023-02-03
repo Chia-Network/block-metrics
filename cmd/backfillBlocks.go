@@ -16,9 +16,11 @@ var backfillBlocksCmd = &cobra.Command{
 		if viper.GetBool("delete-first") {
 			log.Println("Deleting block records")
 			cobra.CheckErr(mets.DeleteBlockRecords())
+			cobra.CheckErr(mets.BackfillBlocks())
+		} else {
+			cobra.CheckErr(mets.FillBlockGaps())
+			cobra.CheckErr(mets.BackfillBlocks())
 		}
-
-		cobra.CheckErr(mets.BackfillBlocks())
 	},
 }
 
