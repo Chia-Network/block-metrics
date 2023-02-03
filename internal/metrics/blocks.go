@@ -14,19 +14,29 @@ import (
 
 // BackfillBlocks loads all the blocks from the chia full node and stores the relevant data into the metrics DB
 func (m *Metrics) BackfillBlocks() error {
-	state, _, err := m.httpClient.FullNodeService.GetBlockchainState()
+	var (
+		oldestHeight uint32
+	)
+
+	// We will start with either the oldest block in the DB, or the blockchain peak height, if the DB is empty
+	oldestRow := m.mysqlClient.QueryRow("select height from blocks order by height asc limit 1")
+	err := oldestRow.Scan(&oldestHeight)
 	if err != nil {
-		log.Fatalf("Error getting blockchain state: %s\n", err.Error())
-	}
-	if state.BlockchainState.IsAbsent() || state.BlockchainState.MustGet().Peak.IsAbsent() {
-		return fmt.Errorf("blockchain state or peak not present in the response")
+		state, _, err := m.httpClient.FullNodeService.GetBlockchainState()
+		if err != nil {
+			log.Fatalf("Error getting blockchain state: %s\n", err.Error())
+		}
+		if state.BlockchainState.IsAbsent() || state.BlockchainState.MustGet().Peak.IsAbsent() {
+			return fmt.Errorf("blockchain state or peak not present in the response")
+		}
+
+		oldestHeight = state.BlockchainState.MustGet().Peak.MustGet().Height
 	}
 
-	height := state.BlockchainState.MustGet().Peak.MustGet().Height
-	start := height - m.rpcPerPage
-	end := height
+	start := oldestHeight - m.rpcPerPage
+	end := oldestHeight
 
-	bar := progressbar.Default(int64(height))
+	bar := progressbar.Default(int64(oldestHeight))
 	for {
 		err = m.fetchAndSaveBlocksBetween(start, end)
 		if err != nil {
@@ -87,6 +97,8 @@ func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
 // We work from lowest height to the highest height, so that we can always be sure the preceding transaction block
 // is present before the non-tx blocks that follow it, so that we can borrow the timestamp from the TX block
 func (m *Metrics) FillBlockGaps() error {
+	// @TODO this query sucks and is real slow.. Need to rework to be faster
+	return nil
 	query := "SELECT (t1.height + 1) as gap_starts_at, " +
 		"       (SELECT MIN(t3.height) -1 FROM blocks t3 WHERE t3.height > t1.height) as gap_ends_at " +
 		"FROM blocks t1 " +

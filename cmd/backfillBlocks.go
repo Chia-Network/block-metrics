@@ -19,6 +19,7 @@ var backfillBlocksCmd = &cobra.Command{
 			cobra.CheckErr(mets.BackfillBlocks())
 		} else {
 			cobra.CheckErr(mets.FillBlockGaps())
+			cobra.CheckErr(mets.BackfillBlocks())
 		}
 	},
 }
