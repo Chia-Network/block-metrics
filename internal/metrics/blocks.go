@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
@@ -97,13 +98,11 @@ func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
 // We work from lowest height to the highest height, so that we can always be sure the preceding transaction block
 // is present before the non-tx blocks that follow it, so that we can borrow the timestamp from the TX block
 func (m *Metrics) FillBlockGaps() error {
-	// @TODO this query sucks and is real slow.. Need to rework to be faster
-	return nil
 	query := "SELECT (t1.height + 1) as gap_starts_at, " +
 		"       (SELECT MIN(t3.height) -1 FROM blocks t3 WHERE t3.height > t1.height) as gap_ends_at " +
 		"FROM blocks t1 " +
 		"WHERE NOT EXISTS (SELECT t2.height FROM blocks t2 WHERE t2.height = t1.height + 1) " +
-		"HAVING gap_ends_at IS NOT NULL order by gap_starts_at asc"
+		"HAVING gap_ends_at IS NOT NULL"
 
 	rows, err := m.mysqlClient.Query(query)
 	if err != nil {
@@ -120,13 +119,31 @@ func (m *Metrics) FillBlockGaps() error {
 		start uint32
 		end   uint32
 	)
+
+	startEnd := map[uint32]uint32{}
+
 	for rows.Next() {
 		err = rows.Scan(&start, &end)
 		if err != nil {
 			return err
 		}
 
-		err = m.fetchAndSaveBlocksBetween(start, end+1) // end is not inclusive in this func, so adding 1
+		startEnd[start] = end
+	}
+
+	// Sort starting blocks lowest to highest, so we can properly fill timestamps
+	keys := make([]uint32, 0, len(startEnd))
+	for k := range startEnd {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return i < j
+	})
+
+	// Fill blocks
+	for _, startBlock := range keys {
+		endBlock := startEnd[startBlock]
+		err = m.fetchAndSaveBlocksBetween(startBlock, endBlock+1) // end is not inclusive in this func, so adding 1
 		if err != nil {
 			return err
 		}
