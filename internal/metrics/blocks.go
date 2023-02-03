@@ -343,7 +343,7 @@ func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		"        sum(count(*)) over (order by count(*) desc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
 		"        sum(count(*)) over (order by count(*) desc) / ? as cumulative_percent " +
-		"    from blocks where height > ? group by farmer_address order by count DESC limit 100 " +
+		"    from blocks where height > ? group by farmer_address order by count DESC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
 	// 1: lookbackWindowPercent
