@@ -49,7 +49,8 @@ func (m *Metrics) BackfillBlocks() error {
 		end = end - m.rpcPerPage
 	}
 
-	return nil
+	// Fills any missing timestamps
+	return m.FillTimestampGaps()
 }
 
 func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
@@ -78,12 +79,14 @@ func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
 
 // FillBlockGaps looks for gaps in the blocks table and fetches the missing blocks
 // Avoids anything below the lowest block currently in the table
+// We work from lowest height to the highest height, so that we can always be sure the preceding transaction block
+// is present before the non-tx blocks that follow it, so that we can borrow the timestamp from the TX block
 func (m *Metrics) FillBlockGaps() error {
 	query := "SELECT (t1.height + 1) as gap_starts_at, " +
 		"       (SELECT MIN(t3.height) -1 FROM blocks t3 WHERE t3.height > t1.height) as gap_ends_at " +
 		"FROM blocks t1 " +
 		"WHERE NOT EXISTS (SELECT t2.height FROM blocks t2 WHERE t2.height = t1.height + 1) " +
-		"HAVING gap_ends_at IS NOT NULL"
+		"HAVING gap_ends_at IS NOT NULL order by gap_starts_at asc"
 
 	rows, err := m.mysqlClient.Query(query)
 	if err != nil {
@@ -110,6 +113,45 @@ func (m *Metrics) FillBlockGaps() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return m.FillTimestampGaps()
+}
+
+// FillTimestampGaps In some cases, there might be blocks that for one reason or another, dont have a timestamp associated
+// This identifies those gaps, and adds the missing timestamps
+func (m *Metrics) FillTimestampGaps() error {
+	query := "select height from blocks where timestamp IS NULL order by height asc;"
+
+	var (
+		height uint32
+	)
+
+	rows, err := m.mysqlClient.Query(query)
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&height)
+		if err != nil {
+			return err
+		}
+
+		timestamp := m.getNonTXBlockTimestamp(height)
+		insert, err := m.mysqlClient.Query("UPDATE blocks set timestamp=? where height=?;", timestamp, height)
+		if err != nil {
+			return err
+		}
+		err = insert.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = rows.Close()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -149,11 +191,61 @@ func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
 	}
 }
 
+// getNonTXBlockTimestamp returns a timestamp to use for a non-transaction block. Returns the timestamp from the next
+// lowest block that has a timestamp
+// This relies on processing blocks from oldest to the newest
+// The only case where we DONT process blocks in this order is the backfill --delete-first option, which goes backwards,
+// so there is useful data ASAP
+// For this case, the "fill missing timestamps" will catch and resolve the issue
+func (m *Metrics) getNonTXBlockTimestamp(blockHeight uint32) sql.NullString {
+	query := "select timestamp from blocks " +
+		"where height < ? " +
+		"and height > ? " +
+		"and timestamp IS NOT NULL order by height desc limit 1;"
+
+	// Constrain to 10 blocks older to make sure we aren't accidentally getting a very old timestamp
+	// Typically this is 5 or less from my observations, but this just allows a buffer, just in case
+	rows, err := m.mysqlClient.Query(query, blockHeight, blockHeight-10)
+	if err != nil {
+		return sql.NullString{}
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Errorf("Could not close rows: %s\n", err.Error())
+		}
+	}(rows)
+
+	var (
+		timestr string
+	)
+	rows.Next()
+	err = rows.Scan(&timestr)
+	if err != nil {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: timestr,
+		Valid:  true,
+	}
+}
+
 func (m *Metrics) saveBlock(block types.FullBlock) error {
 	blockHeight := block.RewardChainBlock.Height
 	farmerPuzzHash := block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash.String()
 	farmerAddress, _ := bech32m.EncodePuzzleHash(block.Foliage.FoliageBlockData.FarmerRewardPuzzleHash, "xch")
-	insert, err := m.mysqlClient.Query("INSERT INTO blocks (height, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?)", blockHeight, farmerPuzzHash, farmerAddress)
+
+	var timestamp sql.NullString
+	if block.FoliageTransactionBlock.IsPresent() {
+		timestamp = sql.NullString{
+			String: block.FoliageTransactionBlock.MustGet().Timestamp.Format("2006-01-02 15:04:05"),
+			Valid:  true,
+		}
+	} else {
+		timestamp = m.getNonTXBlockTimestamp(blockHeight)
+	}
+	insert, err := m.mysqlClient.Query("INSERT INTO blocks (timestamp, height, transaction_block, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?, ?, ?)", timestamp, blockHeight, block.FoliageTransactionBlock.IsPresent(), farmerPuzzHash, farmerAddress)
 	if err != nil {
 		return err
 	}
