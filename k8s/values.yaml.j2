@@ -1,0 +1,52 @@
+image:
+  repository: ghcr.io/chia-network/block-metrics
+  tag: "{{ DOCKER_TAG }}"
+
+imagePullSecrets:
+  - name: block-metrics-image-pull
+
+deployment:
+  containerPort: 9914
+  environment:
+    CHIA_ROOT: /chia-data
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+
+service:
+  enabled: true
+  additionalLabels:
+    prometheus-dev: dev-application-metrics
+    application: block-metrics
+  port: 9914
+
+# Creates a MySQL DB cluster and database with the following settings (utilizes MySQL-Operator)
+mysql:
+  enabled: true
+  name: "blocks"
+  rootUser:
+    secret-name: db-root-creds
+    user: "root"
+    password: "{{ DB_ROOT_PASSWORD }}"
+  standardUser:
+    secret-name: db-user-creds
+    user: "{{ DB_USER }}"
+    password: "{{ DB_PASSWORD }}"
+
+secretEnvironment:
+  BLOCK_METRICS_DB_HOST: "block-metrics-mysql"
+  BLOCK_METRICS_DB_USER: "{{ DB_USER }}"
+  BLOCK_METRICS_DB_PASSWORD: "{{ DB_PASSWORD }}"
+  BLOCK_METRICS_DB_NAME: "blocks"
+
+volumes:
+  - name: chia-data
+    mountPath: /chia-data
+    size: 200Gi
+    storageClassName: longhorn
+
