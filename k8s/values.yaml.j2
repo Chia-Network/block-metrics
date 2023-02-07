@@ -20,9 +20,9 @@ deployment:
 
 service:
   enabled: true
-#  additionalLabels:
-#    prometheus-dev: dev-application-metrics
-#    application: block-metrics
+  additionalLabels:
+    prometheus-dev: dev-application-metrics
+    application: block-metrics
   port: 9914
 
 # Creates a MySQL DB cluster and database with the following settings (utilizes MySQL-Operator)
