@@ -20,9 +20,9 @@ deployment:
 
 service:
   enabled: true
-# @TODO this will also need an application label when enabled
-#  annotations:
-#    prometheus-dev: scrape
+#  additionalLabels:
+#    prometheus-dev: dev-application-metrics
+#    application: block-metrics
   port: 9914
 
 # Creates a MySQL DB cluster and database with the following settings (utilizes MySQL-Operator)
