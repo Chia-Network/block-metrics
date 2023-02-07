@@ -102,11 +102,12 @@ func (m *Metrics) createDBClient() error {
 	var err error
 
 	cfg := mysql.Config{
-		User:   m.dbUser,
-		Passwd: m.dbPass,
-		Net:    "tcp",
-		Addr:   fmt.Sprintf("%s:%d", m.dbHost, m.dbPort),
-		DBName: m.dbName,
+		User:                 m.dbUser,
+		Passwd:               m.dbPass,
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%d", m.dbHost, m.dbPort),
+		DBName:               m.dbName,
+		AllowNativePasswords: true,
 	}
 	m.mysqlClient, err = sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
