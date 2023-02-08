@@ -28,7 +28,7 @@ service:
 # Creates a MySQL DB cluster and database with the following settings (utilizes MySQL-Operator)
 mysql:
   enabled: true
-  name: "blocks"
+  dbName: "blocks"
   rootUser:
     secret-name: db-root-creds
     user: "root"
