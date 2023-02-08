@@ -30,13 +30,14 @@ mysql:
   enabled: true
   dbName: "blocks"
   rootUser:
-    secret-name: db-root-creds
     user: "root"
     password: "{{ DB_ROOT_PASSWORD }}"
   standardUser:
-    secret-name: db-user-creds
     user: "{{ DB_USER }}"
     password: "{{ DB_PASSWORD }}"
+  readOnlyUser:
+    user: "{{ DB_READ_ONLY_USER }}"
+    password: "{{ DB_READ_ONLY_PASSWORD }}"
 
 secretEnvironment:
   BLOCK_METRICS_DB_HOST: "block-metrics-mysql"
