@@ -56,7 +56,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&dbHost, "db-host", "127.0.0.1", "Host or IP address of the DB instance to connect to")
 	rootCmd.PersistentFlags().IntVar(&dbPort, "db-port", 3306, "Port of the database")
 	rootCmd.PersistentFlags().StringVar(&dbUser, "db-user", "root", "The username to use when connecting to the DB")
-	rootCmd.PersistentFlags().StringVar(&dbPass, "db-pass", "password", "The password to use when connecting to the DB")
+	rootCmd.PersistentFlags().StringVar(&dbPass, "db-password", "password", "The password to use when connecting to the DB")
 	rootCmd.PersistentFlags().StringVar(&dbName, "db-name", "blocks", "The name of the database to connect to")
 
 	cobra.CheckErr(viper.BindPFlag("lookback-window", rootCmd.PersistentFlags().Lookup("lookback-window")))
@@ -66,7 +66,7 @@ func init() {
 	cobra.CheckErr(viper.BindPFlag("db-host", rootCmd.PersistentFlags().Lookup("db-host")))
 	cobra.CheckErr(viper.BindPFlag("db-port", rootCmd.PersistentFlags().Lookup("db-port")))
 	cobra.CheckErr(viper.BindPFlag("db-user", rootCmd.PersistentFlags().Lookup("db-user")))
-	cobra.CheckErr(viper.BindPFlag("db-pass", rootCmd.PersistentFlags().Lookup("db-pass")))
+	cobra.CheckErr(viper.BindPFlag("db-password", rootCmd.PersistentFlags().Lookup("db-password")))
 	cobra.CheckErr(viper.BindPFlag("db-name", rootCmd.PersistentFlags().Lookup("db-name")))
 }
 
@@ -103,7 +103,7 @@ func newMetsHelper() *metrics.Metrics {
 		viper.GetString("db-host"),
 		uint16(viper.GetInt("db-port")),
 		viper.GetString("db-user"),
-		viper.GetString("db-pass"),
+		viper.GetString("db-password"),
 		viper.GetString("db-name"),
 		viper.GetInt("lookback-window"),
 		viper.GetInt("rpc-per-page"),
