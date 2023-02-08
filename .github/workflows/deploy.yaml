@@ -37,9 +37,11 @@ jobs:
           url: ${{ secrets.VAULT_URL }}
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
+            secret/data/block-metrics db-root-password | DB_ROOT_PASSWORD;
             secret/data/block-metrics db-user | DB_USER;
             secret/data/block-metrics db-password | DB_PASSWORD;
-            secret/data/block-metrics db-root-password | DB_ROOT_PASSWORD;
+            secret/data/block-metrics db-read-user | DB_READ_ONLY_USER;
+            secret/data/block-metrics db-read-password | DB_READ_ONLY_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/fmt/k8s/fremont-baremetal api_server_url | K8S_API_SERVER_URL;
