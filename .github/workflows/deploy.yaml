@@ -1,4 +1,4 @@
-name: Build & Deploy Internal
+name: Build & Deploy
 
 on:
   push:
@@ -15,8 +15,8 @@ jobs:
   package:
     uses: Chia-Network/actions/.github/workflows/docker-build.yaml@main
 
-  deploy:
-    name: Deploy ${{ matrix.singleton.name }}
+  deploy_internal:
+    name: Deploy Internal
     needs:
       - package
     runs-on: [k8s-public]
@@ -72,3 +72,59 @@ jobs:
           helm_chart_repo: "https://chia-network.github.io/helm-charts"
           helm_chart: "generic"
           helm_values: "./k8s/internal.yaml"
+
+  deploy_public:
+    name: Deploy Public
+    needs:
+      - package
+    runs-on: [k8s-public]
+    container:
+      image: registry.gitlab.com/cmmarslender/kubectl-helm:v3.11.0
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Vault Login
+        uses: Chia-Network/actions/vault/login@main
+        with:
+          vault_url: ${{ secrets.VAULT_URL }}
+          role_name: github-block-metrics
+
+      - name: Get secrets from vault
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          token: ${{ env.VAULT_TOKEN }}
+          secrets: |
+            secret/data/pub-metrics-eks/rds/rds-info db_host | DB_HOST;
+            secret/data/pub-metrics-eks/rds/blocks-write-user username | DB_USER;
+            secret/data/pub-metrics-eks/rds/blocks-write-user password | DB_PASSWORD;
+            secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
+            secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
+
+      - name: Get ephemeral aws credentials
+        uses: Chia-Network/actions/vault/aws-sts@main
+        with:
+          vault_url: ${{ secrets.VAULT_URL }}
+          vault_token: ${{ env.VAULT_TOKEN }}
+          role_name: pub-metrics-deploy
+
+      - name: Log in to cluster
+        run: aws eks update-kubeconfig --name pub-metrics --region us-west-2
+
+      - uses: Chia-Network/actions/k8s/image-pull-secret@main
+        with:
+          secret_name: block-metrics-image-pull
+          namespace: block-metrics
+          username: ${{ env.IMAGE_PULL_USERNAME }}
+          password: ${{ env.IMAGE_PULL_PASSWORD }}
+          docker_server: "ghcr.io"
+
+      - uses: Chia-Network/actions/helm/deploy@main
+        env:
+          DOCKER_TAG: "sha-${{ github.sha }}"
+        with:
+          namespace: "block-metrics"
+          app_name: "block-metrics"
+          helm_chart_repo: "https://chia-network.github.io/helm-charts"
+          helm_chart: "generic"
+          helm_values: "./k8s/pub-metrics.yaml"
