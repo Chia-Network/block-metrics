@@ -335,6 +335,22 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 }
 
 func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
+	lookbackWindowPercent := m.lookbackWindow / 100
+	minHeight := peakHeight - m.lookbackWindow
+
+	// First, make sure we actually have enough blocks in the lookback window to do accurate math
+	// Otherwise, just return an error (assume we are still syncing block history over)
+	countQuery := "select count(*) from blocks where height > ?"
+	countRow := m.mysqlClient.QueryRow(countQuery, minHeight)
+	var count uint32
+	err := countRow.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	if count < m.lookbackWindow {
+		return 0, fmt.Errorf("do not have %d blocks in database to use for nakamoto coefficient calculation", m.lookbackWindow)
+	}
+
 	query := "select number, cumulative_percent from ( " +
 		"select " +
 		"        row_number() over (order by count(*) desc) as number, " +
@@ -350,15 +366,13 @@ func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 	// 2: lookbackWindowPercent
 	// 3: minHeight
 	// 4: thresholdPercent
-	lookbackWindowPercent := m.lookbackWindow / 100
-	minHeight := peakHeight - m.lookbackWindow + 1
 	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, thresholdPercent)
 
 	var (
 		number            int
 		cumulativePercent float64
 	)
-	err := row.Scan(&number, &cumulativePercent)
+	err = row.Scan(&number, &cumulativePercent)
 	if err != nil {
 		return 0, err
 	}

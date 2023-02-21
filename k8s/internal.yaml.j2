@@ -10,9 +10,10 @@ deployment:
   environment:
     CHIA_ROOT: /chia-data
   livenessProbe:
-    httpGet:
-      path: /healthz
-      port: http
+    exec:
+      command:
+        - bash
+        - /usr/local/bin/docker-healthcheck.sh
   readinessProbe:
     httpGet:
       path: /healthz

@@ -12,7 +12,7 @@ func (m *Metrics) initTables() error {
 		"  PRIMARY KEY (`id`)," +
 		"UNIQUE KEY `height-unique` (`height`)," +
 		"KEY `height` (`height`)" +
-		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
 
 	result, err := m.mysqlClient.Query(query)
 	if err != nil {
