@@ -78,7 +78,7 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 	metrics.httpClient, err = rpc.NewClient(rpc.ConnectionModeHTTP, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
 		Scheme: "https",
 		Host:   viper.GetString("chia-hostname"),
-	}))
+	}), rpc.WithTimeout(60 * time.Second))
 	if err != nil {
 		return nil, err
 	}
