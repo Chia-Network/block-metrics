@@ -41,17 +41,17 @@ configmapEnvironment:
   BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain.chia-blockchain.svc
 
 secretFile:
-  mountPath: /root/.chia/mainnet/config/
+  mountPath: /root/.chia/mainnet/config
   stringValues:
     config.yaml: |
       {{ CONFIG_YAML | indent(6, False) }}
-    private_crt: |
+    private.crt: |
       {{ PRIVATE_CRT | indent(6, False) }}
-    private_key: |
+    private.key: |
       {{ PRIVATE_KEY | indent(6, False) }}
-    public_crt: |
+    public.crt: |
       {{ PUBLIC_CRT | indent(6, False) }}
-    public_key: |
+    public.key: |
       {{ PUBLIC_KEY | indent(6, False) }}
 
 
