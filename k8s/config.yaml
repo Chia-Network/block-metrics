@@ -1,0 +1,46 @@
+daemon_port: 55400
+daemon_ssl:
+  private_crt: config/private.crt
+  private_key: config/private.key
+farmer:
+  port: 8447
+  rpc_port: 8559
+  ssl:
+    private_crt: config/private.crt
+    private_key: config/private.key
+    public_crt: config/public.crt
+    public_key: config/public.key
+full_node:
+  database_path: db/blockchain_v2_CHALLENGE.sqlite
+  dns_servers:
+    - dns-introducer.chia.net
+  port: 8444
+  rpc_port: 8555
+  selected_network: mainnet
+  ssl:
+    private_crt: config/private.crt
+    private_key: config/private.key
+    public_crt: config/public.crt
+    public_key: config/public.key
+harvester:
+  port: 8448
+  rpc_port: 8560
+  selected_network: mainnet
+  ssl:
+    private_crt: config/private.crt
+    private_key: config/private.key
+seeder:
+  crawler:
+    rpc_port: 8561
+    ssl:
+      private_crt: config/private.crt
+      private_key: config/private.key
+selected_network: mainnet
+wallet:
+  port: 8449
+  rpc_port: 9256
+  ssl:
+    private_crt: config/private.crt
+    private_key: config/private.key
+    public_crt: config/public.crt
+    public_key: config/public.key

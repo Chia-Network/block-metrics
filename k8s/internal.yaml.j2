@@ -40,15 +40,26 @@ mysql:
     user: "{{ DB_READ_ONLY_USER }}"
     password: "{{ DB_READ_ONLY_PASSWORD }}"
 
+configmapEnvironment:
+  BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain.chia-blockchain.svc
+
+secretFile:
+  mountPath: /root/.chia/mainnet/config/
+  stringValues:
+    config.yaml: |
+      {{ CONFIG_YAML | indent(6, False) }}
+    private_crt: |
+      {{ PRIVATE_CRT | indent(6, False) }}
+    private_key: |
+      {{ PRIVATE_KEY | indent(6, False) }}
+    public_crt: |
+      {{ PUBLIC_CRT | indent(6, False) }}
+    public_key: |
+      {{ PUBLIC_KEY | indent(6, False) }}
+
+
 secretEnvironment:
   BLOCK_METRICS_DB_HOST: "block-metrics-mysql"
   BLOCK_METRICS_DB_USER: "{{ DB_USER }}"
   BLOCK_METRICS_DB_PASSWORD: "{{ DB_PASSWORD }}"
   BLOCK_METRICS_DB_NAME: "blocks"
-
-volumes:
-  - name: chia-data
-    mountPath: /chia-data
-    size: 200Gi
-    storageClassName: longhorn
-

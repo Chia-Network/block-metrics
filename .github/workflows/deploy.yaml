@@ -45,6 +45,15 @@ jobs:
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/fmt/k8s/fremont-baremetal api_server_url | K8S_API_SERVER_URL;
+            secret/data/fmt/k8s/fremont-baremetal private_crt | PRIVATE_CRT;
+            secret/data/fmt/k8s/fremont-baremetal private_key | PRIVATE_KEY;
+            secret/data/fmt/k8s/fremont-baremetal public_crt | PUBLIC_CRT;
+            secret/data/fmt/k8s/fremont-baremetal public_key | PUBLIC_KEY;
+
+      - name: Get config.yaml
+        run: |
+          CONFIG_YAML=$(cat k8s/config.yaml)
+          echo "CONFIG_YAML=$CONFIG_YAML" >> $GITHUB_ENV
 
       - name: Login to k8s cluster
         uses: Chia-Network/actions/vault/k8s-login@main
