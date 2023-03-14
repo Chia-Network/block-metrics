@@ -38,7 +38,7 @@ mysql:
     password: "{{ DB_READ_ONLY_PASSWORD }}"
 
 configmapEnvironment:
-  BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain.chia-blockchain.svc
+  BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain-local.chia-blockchain.svc
 
 secretFile:
   mountPath: /root/.chia/mainnet/config
