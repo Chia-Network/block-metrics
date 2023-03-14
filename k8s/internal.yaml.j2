@@ -7,13 +7,10 @@ imagePullSecrets:
 
 deployment:
   containerPort: 9914
-  environment:
-    CHIA_ROOT: /chia-data
   livenessProbe:
-    exec:
-      command:
-        - bash
-        - /usr/local/bin/docker-healthcheck.sh
+    httpGet:
+      path: /healthz
+      port: http
   readinessProbe:
     httpGet:
       path: /healthz
