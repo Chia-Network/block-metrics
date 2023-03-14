@@ -116,8 +116,10 @@ jobs:
 
       - name: Get config.yaml
         run: |
-          CONFIG_YAML=$(cat k8s/config.yaml)
-          echo "CONFIG_YAML=$CONFIG_YAML" >> $GITHUB_ENV
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "CONFIG_YAML<<$EOF" >> $GITHUB_ENV
+          cat k8s/config.yaml >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
 
       - name: Get ephemeral aws credentials
         uses: Chia-Network/actions/vault/aws-sts@main
