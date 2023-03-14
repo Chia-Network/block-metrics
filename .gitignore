@@ -2,3 +2,5 @@ main
 bin/
 .idea/*
 local-data/*
+k8s/internal.yaml
+k8s/pub-metrics.yaml
