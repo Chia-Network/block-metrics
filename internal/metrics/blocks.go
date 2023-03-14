@@ -211,7 +211,11 @@ func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
 			return
 		}
 
-		if result.Block.IsAbsent() {
+		// result can sometimes be nil when the websocket message about a new block is from a node that is slightly
+		// ahead of the node that we request the block from
+		// In these cases, it should be relatively safe to skip the block, since the automatic backfill should
+		// get the block later
+		if result == nil || result.Block.IsAbsent() {
 			log.Errorf("Block was not present in the response")
 			return
 		}

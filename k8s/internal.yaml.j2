@@ -7,13 +7,10 @@ imagePullSecrets:
 
 deployment:
   containerPort: 9914
-  environment:
-    CHIA_ROOT: /chia-data
   livenessProbe:
-    exec:
-      command:
-        - bash
-        - /usr/local/bin/docker-healthcheck.sh
+    httpGet:
+      path: /healthz
+      port: http
   readinessProbe:
     httpGet:
       path: /healthz
@@ -40,15 +37,25 @@ mysql:
     user: "{{ DB_READ_ONLY_USER }}"
     password: "{{ DB_READ_ONLY_PASSWORD }}"
 
+configmapEnvironment:
+  BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain-local.chia-blockchain.svc
+
+secretFile:
+  mountPath: /root/.chia/mainnet/config
+  stringValues:
+    config.yaml: |
+      {{ CONFIG_YAML | indent(6, False) }}
+    private.crt: |
+      {{ PRIVATE_CRT | indent(6, False) }}
+    private.key: |
+      {{ PRIVATE_KEY | indent(6, False) }}
+    public.crt: |
+      {{ PUBLIC_CRT | indent(6, False) }}
+    public.key: |
+      {{ PUBLIC_KEY | indent(6, False) }}
+
 secretEnvironment:
   BLOCK_METRICS_DB_HOST: "block-metrics-mysql"
   BLOCK_METRICS_DB_USER: "{{ DB_USER }}"
   BLOCK_METRICS_DB_PASSWORD: "{{ DB_PASSWORD }}"
   BLOCK_METRICS_DB_NAME: "blocks"
-
-volumes:
-  - name: chia-data
-    mountPath: /chia-data
-    size: 200Gi
-    storageClassName: longhorn
-
