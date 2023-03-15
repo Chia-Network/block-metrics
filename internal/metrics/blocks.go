@@ -99,6 +99,8 @@ func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
 // We work from lowest height to the highest height, so that we can always be sure the preceding transaction block
 // is present before the non-tx blocks that follow it, so that we can borrow the timestamp from the TX block
 func (m *Metrics) FillBlockGaps() error {
+	m.fillGapsLock.Lock()
+	defer m.fillGapsLock.Unlock()
 	query := "SELECT (t1.height + 1) as gap_starts_at, " +
 		"       (SELECT MIN(t3.height) -1 FROM blocks t3 WHERE t3.height > t1.height) as gap_ends_at " +
 		"FROM blocks t1 " +
@@ -143,10 +145,32 @@ func (m *Metrics) FillBlockGaps() error {
 
 	// Fill blocks
 	for _, startBlock := range keys {
-		endBlock := startEnd[startBlock]
-		err = m.fetchAndSaveBlocksBetween(startBlock, endBlock+1) // end is not inclusive in this func, so adding 1
-		if err != nil {
-			return err
+		// Ensure we don't request too many blocks at once and kill the node RPC
+		endBlock := startEnd[startBlock] + 1 // end is not inclusive in this func, so adding 1
+		start := endBlock - m.rpcPerPage
+
+		for {
+			if start < startBlock {
+				start = startBlock
+			}
+			log.Printf("Fetching blocks between %d and %d\n", start, endBlock)
+			err = m.fetchAndSaveBlocksBetween(start, endBlock)
+			if err != nil {
+				return err
+			}
+
+			if start <= startBlock {
+				break
+			}
+
+			start = start - m.rpcPerPage
+			endBlock = endBlock - m.rpcPerPage
+
+			// Fills any missing timestamps
+			err = m.FillTimestampGaps()
+			if err != nil {
+				return err
+			}
 		}
 	}
 

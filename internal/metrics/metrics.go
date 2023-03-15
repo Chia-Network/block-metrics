@@ -46,6 +46,8 @@ type Metrics struct {
 	refreshing  *sync.Mutex
 	peakLock    *sync.Mutex
 	highestPeak uint32
+
+	fillGapsLock *sync.Mutex
 }
 
 // NewMetrics returns a new metrics instance
@@ -65,6 +67,7 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 		rpcPerPage:        uint32(rpcPerPage),
 		refreshing:        &sync.Mutex{},
 		peakLock:          &sync.Mutex{},
+		fillGapsLock:      &sync.Mutex{},
 	}
 
 	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
@@ -78,7 +81,7 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 	metrics.httpClient, err = rpc.NewClient(rpc.ConnectionModeHTTP, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
 		Scheme: "https",
 		Host:   viper.GetString("chia-hostname"),
-	}), rpc.WithTimeout(60 * time.Second))
+	}), rpc.WithTimeout(60*time.Second))
 	if err != nil {
 		return nil, err
 	}
