@@ -409,3 +409,29 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 
 	return number, nil
 }
+
+// GetOldestBlock returns the oldest block height from the DB
+func (m *Metrics) GetOldestBlock() (uint32, error) {
+	countQuery := "select height from blocks order by height asc limit 1"
+	countRow := m.mysqlClient.QueryRow(countQuery)
+	var height uint32
+	err := countRow.Scan(&height)
+	if err != nil {
+		return 0, err
+	}
+
+	return height, nil
+}
+
+// GetNewestBlock returns the newest block height from the DB
+func (m *Metrics) GetNewestBlock() (uint32, error) {
+	countQuery := "select height from blocks order by height desc limit 1"
+	countRow := m.mysqlClient.QueryRow(countQuery)
+	var height uint32
+	err := countRow.Scan(&height)
+	if err != nil {
+		return 0, err
+	}
+
+	return height, nil
+}
