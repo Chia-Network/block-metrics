@@ -197,7 +197,7 @@ func (m *Metrics) FillTimestampGaps() error {
 			return err
 		}
 
-		timestamp := m.getNonTXBlockTimestamp(height)
+		timestamp := m.GetNonTXBlockTimestamp(height)
 		insert, err := m.mysqlClient.Query("UPDATE blocks set timestamp=? where height=?;", timestamp, height)
 		if err != nil {
 			return err
@@ -254,13 +254,13 @@ func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
 	}
 }
 
-// getNonTXBlockTimestamp returns a timestamp to use for a non-transaction block. Returns the timestamp from the next
+// GetNonTXBlockTimestamp returns a timestamp to use for a non-transaction block. Returns the timestamp from the next
 // lowest block that has a timestamp
 // This relies on processing blocks from oldest to the newest
 // The only case where we DONT process blocks in this order is the backfill --delete-first option, which goes backwards,
 // so there is useful data ASAP
 // For this case, the "fill missing timestamps" will catch and resolve the issue
-func (m *Metrics) getNonTXBlockTimestamp(blockHeight uint32) sql.NullString {
+func (m *Metrics) GetNonTXBlockTimestamp(blockHeight uint32) sql.NullString {
 	query := "select timestamp from blocks " +
 		"where height < ? " +
 		"and height > ? " +
@@ -306,7 +306,7 @@ func (m *Metrics) saveBlock(block types.FullBlock) error {
 			Valid:  true,
 		}
 	} else {
-		timestamp = m.getNonTXBlockTimestamp(blockHeight)
+		timestamp = m.GetNonTXBlockTimestamp(blockHeight)
 	}
 	insert, err := m.mysqlClient.Query("INSERT INTO blocks (timestamp, height, transaction_block, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?, ?, ?)", timestamp, blockHeight, block.FoliageTransactionBlock.IsPresent(), farmerPuzzHash, farmerAddress)
 	if err != nil {
