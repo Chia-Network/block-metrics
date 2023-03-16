@@ -345,13 +345,13 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 		return
 	}
 
-	nakamoto50, err := m.calculateNakamoto(peakHeight, 50)
+	nakamoto50, err := m.CalculateNakamoto(peakHeight, 50)
 	if err != nil {
 		log.Errorf("Error calculating 50%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
 	}
 
-	nakamoto51, err := m.calculateNakamoto(peakHeight, 51)
+	nakamoto51, err := m.CalculateNakamoto(peakHeight, 51)
 	if err != nil {
 		log.Errorf("Error calculating 51%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
@@ -362,7 +362,8 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 	m.prometheusMetrics.blockHeight.Set(float64(peakHeight))
 }
 
-func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
+// CalculateNakamoto calculates the NC for the given peak height and percentage
+func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
 	lookbackWindowPercent := m.lookbackWindow / 100
 	minHeight := peakHeight - m.lookbackWindow
 
