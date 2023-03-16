@@ -388,14 +388,15 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		"        sum(count(*)) over (order by count(*) desc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
 		"        sum(count(*)) over (order by count(*) desc) / ? as cumulative_percent " +
-		"    from blocks where height > ? group by farmer_address order by count DESC limit 1000 " +
+		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
 	// 1: lookbackWindowPercent
 	// 2: lookbackWindowPercent
 	// 3: minHeight
-	// 4: thresholdPercent
-	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, thresholdPercent)
+	// 4: peakHeight
+	// 5: thresholdPercent
+	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, peakHeight, thresholdPercent)
 
 	var (
 		number            int
