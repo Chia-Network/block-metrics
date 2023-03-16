@@ -148,3 +148,8 @@ func (m *Metrics) newGauge(name string, help string) *wrappedPrometheus.LazyGaug
 
 	return lg
 }
+
+// LookbackWindow returns the configured lookback window
+func (m *Metrics) LookbackWindow() uint32 {
+	return m.lookbackWindow
+}
