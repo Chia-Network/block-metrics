@@ -8,6 +8,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // historicalOutputCmd represents the historicalOutput command
@@ -49,6 +50,7 @@ var historicalOutputCmd = &cobra.Command{
 
 		bar := progressbar.Default(int64(newest - startBlock))
 
+		interval := viper.GetUint32("interval")
 		for {
 			newestBlock, err := mets.GetNewestBlock()
 			if err != nil {
@@ -78,8 +80,8 @@ var historicalOutputCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
-			startBlock += 100
-			err = bar.Add(100)
+			startBlock += interval
+			err = bar.Add(int(interval))
 			_ = err
 		}
 
@@ -91,5 +93,12 @@ var historicalOutputCmd = &cobra.Command{
 }
 
 func init() {
+	var (
+		interval uint32
+	)
+
+	historicalOutputCmd.PersistentFlags().Uint32Var(&interval, "interval", 100, "How many blocks between calculating the NC")
+	cobra.CheckErr(viper.BindPFlag("interval", historicalOutputCmd.PersistentFlags().Lookup("interval")))
+
 	rootCmd.AddCommand(historicalOutputCmd)
 }
