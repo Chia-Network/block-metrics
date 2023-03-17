@@ -197,7 +197,7 @@ func (m *Metrics) FillTimestampGaps() error {
 			return err
 		}
 
-		timestamp := m.getNonTXBlockTimestamp(height)
+		timestamp := m.GetNonTXBlockTimestamp(height)
 		insert, err := m.mysqlClient.Query("UPDATE blocks set timestamp=? where height=?;", timestamp, height)
 		if err != nil {
 			return err
@@ -254,13 +254,13 @@ func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
 	}
 }
 
-// getNonTXBlockTimestamp returns a timestamp to use for a non-transaction block. Returns the timestamp from the next
+// GetNonTXBlockTimestamp returns a timestamp to use for a non-transaction block. Returns the timestamp from the next
 // lowest block that has a timestamp
 // This relies on processing blocks from oldest to the newest
 // The only case where we DONT process blocks in this order is the backfill --delete-first option, which goes backwards,
 // so there is useful data ASAP
 // For this case, the "fill missing timestamps" will catch and resolve the issue
-func (m *Metrics) getNonTXBlockTimestamp(blockHeight uint32) sql.NullString {
+func (m *Metrics) GetNonTXBlockTimestamp(blockHeight uint32) sql.NullString {
 	query := "select timestamp from blocks " +
 		"where height < ? " +
 		"and height > ? " +
@@ -306,7 +306,7 @@ func (m *Metrics) saveBlock(block types.FullBlock) error {
 			Valid:  true,
 		}
 	} else {
-		timestamp = m.getNonTXBlockTimestamp(blockHeight)
+		timestamp = m.GetNonTXBlockTimestamp(blockHeight)
 	}
 	insert, err := m.mysqlClient.Query("INSERT INTO blocks (timestamp, height, transaction_block, farmer_puzzle_hash, farmer_address) VALUES(?, ?, ?, ?, ?)", timestamp, blockHeight, block.FoliageTransactionBlock.IsPresent(), farmerPuzzHash, farmerAddress)
 	if err != nil {
@@ -345,13 +345,13 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 		return
 	}
 
-	nakamoto50, err := m.calculateNakamoto(peakHeight, 50)
+	nakamoto50, err := m.CalculateNakamoto(peakHeight, 50)
 	if err != nil {
 		log.Errorf("Error calculating 50%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
 	}
 
-	nakamoto51, err := m.calculateNakamoto(peakHeight, 51)
+	nakamoto51, err := m.CalculateNakamoto(peakHeight, 51)
 	if err != nil {
 		log.Errorf("Error calculating 51%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
@@ -362,7 +362,8 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 	m.prometheusMetrics.blockHeight.Set(float64(peakHeight))
 }
 
-func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
+// CalculateNakamoto calculates the NC for the given peak height and percentage
+func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
 	lookbackWindowPercent := m.lookbackWindow / 100
 	minHeight := peakHeight - m.lookbackWindow
 
@@ -387,14 +388,15 @@ func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		"        sum(count(*)) over (order by count(*) desc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
 		"        sum(count(*)) over (order by count(*) desc) / ? as cumulative_percent " +
-		"    from blocks where height > ? group by farmer_address order by count DESC limit 1000 " +
+		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
 	// 1: lookbackWindowPercent
 	// 2: lookbackWindowPercent
 	// 3: minHeight
-	// 4: thresholdPercent
-	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, thresholdPercent)
+	// 4: peakHeight
+	// 5: thresholdPercent
+	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, peakHeight, thresholdPercent)
 
 	var (
 		number            int
@@ -406,4 +408,30 @@ func (m *Metrics) calculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 	}
 
 	return number, nil
+}
+
+// GetOldestBlock returns the oldest block height from the DB
+func (m *Metrics) GetOldestBlock() (uint32, error) {
+	countQuery := "select height from blocks order by height asc limit 1"
+	countRow := m.mysqlClient.QueryRow(countQuery)
+	var height uint32
+	err := countRow.Scan(&height)
+	if err != nil {
+		return 0, err
+	}
+
+	return height, nil
+}
+
+// GetNewestBlock returns the newest block height from the DB
+func (m *Metrics) GetNewestBlock() (uint32, error) {
+	countQuery := "select height from blocks order by height desc limit 1"
+	countRow := m.mysqlClient.QueryRow(countQuery)
+	var height uint32
+	err := countRow.Scan(&height)
+	if err != nil {
+		return 0, err
+	}
+
+	return height, nil
 }
