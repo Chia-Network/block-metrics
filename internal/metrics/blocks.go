@@ -364,7 +364,7 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 
 // CalculateNakamoto calculates the NC for the given peak height and percentage
 func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
-	lookbackWindowPercent := m.lookbackWindow / 100
+	lookbackWindowPercent := float64(m.lookbackWindow) / 100
 	minHeight := peakHeight - m.lookbackWindow
 
 	// First, make sure we actually have enough blocks in the lookback window to do accurate math
@@ -388,7 +388,7 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
 		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) / ? as cumulative_percent " +
-		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC limit 1000 " +
+		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC, farmer_address ASC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
 	// 1: lookbackWindowPercent
