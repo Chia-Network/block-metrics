@@ -382,12 +382,12 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 
 	query := "select number, cumulative_percent from ( " +
 		"select " +
-		"        row_number() over (order by count(*) desc) as number, " +
+		"        row_number() over (order by count(*) desc, farmer_address asc) as number, " +
 		"        farmer_address, " +
 		"        count(*) as count, " +
-		"        sum(count(*)) over (order by count(*) desc) as cumulative_count, " +
+		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
-		"        sum(count(*)) over (order by count(*) desc) / ? as cumulative_percent " +
+		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) / ? as cumulative_percent " +
 		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
