@@ -75,6 +75,14 @@ jobs:
           docker_server: "ghcr.io"
 
       - uses: Chia-Network/actions/helm/deploy@main
+        with:
+          namespace: "block-metrics"
+          app_name: "mysql"
+          helm_chart_repo: "https://charts.bitnami.com/bitnami"
+          helm_chart: "mysql"
+          helm_values: "./k8s/mysql.yaml"
+
+      - uses: Chia-Network/actions/helm/deploy@main
         env:
           DOCKER_TAG: "sha-${{ github.sha }}"
         with:

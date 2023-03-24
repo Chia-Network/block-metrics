@@ -23,20 +23,6 @@ service:
     application: block-metrics
   port: 9914
 
-# Creates a MySQL DB cluster and database with the following settings (utilizes MySQL-Operator)
-mysql:
-  enabled: true
-  dbName: "blocks"
-  rootUser:
-    user: "root"
-    password: "{{ DB_ROOT_PASSWORD }}"
-  standardUser:
-    user: "{{ DB_USER }}"
-    password: "{{ DB_PASSWORD }}"
-  readOnlyUser:
-    user: "{{ DB_READ_ONLY_USER }}"
-    password: "{{ DB_READ_ONLY_PASSWORD }}"
-
 configmapEnvironment:
   BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain-local.chia-blockchain.svc
 
