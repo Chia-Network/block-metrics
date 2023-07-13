@@ -41,7 +41,7 @@ secretFile:
       {{ PUBLIC_KEY | indent(6, False) }}
 
 secretEnvironment:
-  BLOCK_METRICS_DB_HOST: "mysql"
+  BLOCK_METRICS_DB_HOST: "{{ DB_HOST }}"
   BLOCK_METRICS_DB_USER: "{{ DB_USER }}"
   BLOCK_METRICS_DB_PASSWORD: "{{ DB_PASSWORD }}"
   BLOCK_METRICS_DB_NAME: "blocks"
