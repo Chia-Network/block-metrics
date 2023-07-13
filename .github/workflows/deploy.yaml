@@ -21,7 +21,7 @@ jobs:
       - package
     runs-on: [k8s-public]
     container:
-      image: registry.gitlab.com/cmmarslender/kubectl-helm:v3.11.0
+      image: registry.gitlab.com/cmmarslender/kubectl-helm:v3
     steps:
       - uses: actions/checkout@v3
 
@@ -37,11 +37,9 @@ jobs:
           url: ${{ secrets.VAULT_URL }}
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
-            secret/data/block-metrics db-root-password | DB_ROOT_PASSWORD;
-            secret/data/block-metrics db-user | DB_USER;
-            secret/data/block-metrics db-password | DB_PASSWORD;
-            secret/data/block-metrics db-read-user | DB_READ_ONLY_USER;
-            secret/data/block-metrics db-read-password | DB_READ_ONLY_PASSWORD;
+            secret/data/fmt/mysql1/db-info host | DB_HOST;
+            secret/data/fmt/mysql1/users/blocks-write-user username | DB_USER;
+            secret/data/fmt/mysql1/users/blocks-write-user password | DB_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/fmt/k8s/fremont-baremetal api_server_url | K8S_API_SERVER_URL;
@@ -75,14 +73,6 @@ jobs:
           docker_server: "ghcr.io"
 
       - uses: Chia-Network/actions/helm/deploy@main
-        with:
-          namespace: "block-metrics"
-          app_name: "mysql"
-          helm_chart_repo: "https://charts.bitnami.com/bitnami"
-          helm_chart: "mysql"
-          helm_values: "./k8s/mysql.yaml"
-
-      - uses: Chia-Network/actions/helm/deploy@main
         env:
           DOCKER_TAG: "sha-${{ github.sha }}"
         with:
@@ -98,7 +88,7 @@ jobs:
       - package
     runs-on: [k8s-public]
     container:
-      image: registry.gitlab.com/cmmarslender/kubectl-helm:v3.11.0
+      image: registry.gitlab.com/cmmarslender/kubectl-helm:v3
     steps:
       - uses: actions/checkout@v3
 
