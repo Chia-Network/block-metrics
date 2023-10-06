@@ -26,6 +26,13 @@ service:
 configmapEnvironment:
   BLOCK_METRICS_CHIA_HOSTNAME: chia-blockchain-local.chia-blockchain.svc
 
+configmapFile:
+  mountPath: "/root"
+  values:
+    ".block-metrics.yaml": |-
+      adjusted-ignore-addresses:
+        - "xch183rqja3f2ak4f72w9enc88v0788vjp5ns3c2n2sctxpcnewzh2yqtcu2rs"
+
 secretFile:
   mountPath: /root/.chia/mainnet/config
   stringValues:
