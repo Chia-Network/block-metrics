@@ -12,6 +12,7 @@ import (
 	"github.com/chia-network/go-chia-libs/pkg/types"
 	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // BackfillBlocks loads all the blocks from the chia full node and stores the relevant data into the metrics DB
@@ -358,8 +359,22 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 		return
 	}
 
+	nakamoto50Adj, err := m.CalculateNakamoto(peakHeight, 50, viper.GetStringSlice("adjusted-ignore-addresses"))
+	if err != nil {
+		log.Errorf("Error calculating 50%% threshold adjusted nakamoto coefficient: %s\n", err.Error())
+		return
+	}
+
+	nakamoto51Adj, err := m.CalculateNakamoto(peakHeight, 51, viper.GetStringSlice("adjusted-ignore-addresses"))
+	if err != nil {
+		log.Errorf("Error calculating 51%% threshold adjusted nakamoto coefficient: %s\n", err.Error())
+		return
+	}
+
 	m.prometheusMetrics.nakamotoCoefficient50.Set(float64(nakamoto50))
 	m.prometheusMetrics.nakamotoCoefficient51.Set(float64(nakamoto51))
+	m.prometheusMetrics.nakamotoCoefficient50Adjusted.Set(float64(nakamoto50Adj))
+	m.prometheusMetrics.nakamotoCoefficient51Adjusted.Set(float64(nakamoto51Adj))
 	m.prometheusMetrics.blockHeight.Set(float64(peakHeight))
 }
 
