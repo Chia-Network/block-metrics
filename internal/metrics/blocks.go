@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
 	"github.com/chia-network/go-chia-libs/pkg/types"
 	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // BackfillBlocks loads all the blocks from the chia full node and stores the relevant data into the metrics DB
@@ -345,25 +347,39 @@ func (m *Metrics) refreshMetrics(peakHeight uint32) {
 		return
 	}
 
-	nakamoto50, err := m.CalculateNakamoto(peakHeight, 50)
+	nakamoto50, err := m.CalculateNakamoto(peakHeight, 50, []string{})
 	if err != nil {
 		log.Errorf("Error calculating 50%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
 	}
 
-	nakamoto51, err := m.CalculateNakamoto(peakHeight, 51)
+	nakamoto51, err := m.CalculateNakamoto(peakHeight, 51, []string{})
 	if err != nil {
 		log.Errorf("Error calculating 51%% threshold nakamoto coefficient: %s\n", err.Error())
 		return
 	}
 
+	nakamoto50Adj, err := m.CalculateNakamoto(peakHeight, 50, viper.GetStringSlice("adjusted-ignore-addresses"))
+	if err != nil {
+		log.Errorf("Error calculating 50%% threshold adjusted nakamoto coefficient: %s\n", err.Error())
+		return
+	}
+
+	nakamoto51Adj, err := m.CalculateNakamoto(peakHeight, 51, viper.GetStringSlice("adjusted-ignore-addresses"))
+	if err != nil {
+		log.Errorf("Error calculating 51%% threshold adjusted nakamoto coefficient: %s\n", err.Error())
+		return
+	}
+
 	m.prometheusMetrics.nakamotoCoefficient50.Set(float64(nakamoto50))
 	m.prometheusMetrics.nakamotoCoefficient51.Set(float64(nakamoto51))
+	m.prometheusMetrics.nakamotoCoefficient50Adjusted.Set(float64(nakamoto50Adj))
+	m.prometheusMetrics.nakamotoCoefficient51Adjusted.Set(float64(nakamoto51Adj))
 	m.prometheusMetrics.blockHeight.Set(float64(peakHeight))
 }
 
 // CalculateNakamoto calculates the NC for the given peak height and percentage
-func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (int, error) {
+func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int, ignoreAddresses []string) (int, error) {
 	lookbackWindowPercent := float64(m.lookbackWindow) / 100
 	minHeight := peakHeight - m.lookbackWindow
 
@@ -380,6 +396,10 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		return 0, fmt.Errorf("do not have %d blocks in database to use for nakamoto coefficient calculation", m.lookbackWindow)
 	}
 
+	//if ignoreAddresses is nothing, just add an empty string
+	if len(ignoreAddresses) == 0 {
+		ignoreAddresses = append(ignoreAddresses, "")
+	}
 	query := "select number, cumulative_percent from ( " +
 		"select " +
 		"        row_number() over (order by count(*) desc, farmer_address asc) as number, " +
@@ -388,15 +408,21 @@ func (m *Metrics) CalculateNakamoto(peakHeight uint32, thresholdPercent int) (in
 		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) as cumulative_count, " +
 		"        count(*)/? as percent, " +
 		"        sum(count(*)) over (order by count(*) desc, farmer_address asc) / ? as cumulative_percent " +
-		"    from blocks where height > ? and height <= ? group by farmer_address order by count DESC, farmer_address ASC limit 1000 " +
+		"    from blocks where height > ? and height <= ? and farmer_address NOT IN (?" + strings.Repeat(",?", len(ignoreAddresses)-1) + ") group by farmer_address order by count DESC, farmer_address ASC limit 1000 " +
 		") as intermediary " +
 		"where cumulative_percent >= ? order by cumulative_percent asc, number asc limit 1;"
 	// 1: lookbackWindowPercent
 	// 2: lookbackWindowPercent
 	// 3: minHeight
 	// 4: peakHeight
-	// 5: thresholdPercent
-	row := m.mysqlClient.QueryRow(query, lookbackWindowPercent, lookbackWindowPercent, minHeight, peakHeight, thresholdPercent)
+	// 5: Ignore Addresses...
+	// 6: thresholdPercent
+	args := []interface{}{lookbackWindowPercent, lookbackWindowPercent, minHeight, peakHeight}
+	for _, _ignore := range ignoreAddresses {
+		args = append(args, _ignore)
+	}
+	args = append(args, thresholdPercent)
+	row := m.mysqlClient.QueryRow(query, args...)
 
 	var (
 		number            int

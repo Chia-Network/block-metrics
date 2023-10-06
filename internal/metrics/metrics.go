@@ -18,7 +18,11 @@ import (
 type prometheusMetrics struct {
 	nakamotoCoefficient50 *wrappedPrometheus.LazyGauge
 	nakamotoCoefficient51 *wrappedPrometheus.LazyGauge
-	blockHeight           *wrappedPrometheus.LazyGauge
+
+	nakamotoCoefficient50Adjusted *wrappedPrometheus.LazyGauge
+	nakamotoCoefficient51Adjusted *wrappedPrometheus.LazyGauge
+
+	blockHeight *wrappedPrometheus.LazyGauge
 }
 
 // Metrics deals with the block db and metrics
@@ -127,6 +131,8 @@ func (m *Metrics) createDBClient() error {
 func (m *Metrics) initMetrics() {
 	m.prometheusMetrics.nakamotoCoefficient50 = m.newGauge("nakamoto_coefficient_gt50", "Nakamoto coefficient when we calculate for >50% of nodes")
 	m.prometheusMetrics.nakamotoCoefficient51 = m.newGauge("nakamoto_coefficient_gt51", "Nakamoto coefficient when we calculate for >51% of nodes")
+	m.prometheusMetrics.nakamotoCoefficient50Adjusted = m.newGauge("nakamoto_coefficient_gt50_adjusted", "Nakamoto coefficient when we calculate for >50% of nodes excluding configured farmer addresses")
+	m.prometheusMetrics.nakamotoCoefficient51Adjusted = m.newGauge("nakamoto_coefficient_gt51_adjusted", "Nakamoto coefficient when we calculate for >51% of nodes excluding configured farmer addresses")
 	m.prometheusMetrics.blockHeight = m.newGauge("block_height", "Block height for current set of metrics")
 }
 

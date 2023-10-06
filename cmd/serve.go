@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/chia-network/block-metrics/internal/metrics"
 )
@@ -27,6 +28,14 @@ var serveCmd = &cobra.Command{
 				log.Errorf("Error closing websocket connection: %s\n", err.Error())
 			}
 		}(mets)
+
+		ignoreAddresses := viper.GetStringSlice("adjusted-ignore-addresses")
+		if len(ignoreAddresses) > 0 {
+			log.Println("Ignoring the following addresses when calculating adjusted NC")
+			for _, _ignore := range ignoreAddresses {
+				log.Printf(" - %s\n", _ignore)
+			}
+		}
 
 		log.Fatalln(mets.StartServer())
 	},

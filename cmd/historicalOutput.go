@@ -61,11 +61,11 @@ var historicalOutputCmd = &cobra.Command{
 				break
 			}
 
-			nc50, err := mets.CalculateNakamoto(startBlock, 50)
+			nc50, err := mets.CalculateNakamoto(startBlock, 50, []string{})
 			if err != nil {
 				log.Printf("Error calculating 50%% NC for peak %d: %s\n", startBlock, err.Error())
 			}
-			nc51, err := mets.CalculateNakamoto(startBlock, 51)
+			nc51, err := mets.CalculateNakamoto(startBlock, 51, []string{})
 			if err != nil {
 				log.Printf("Error calculating 51%% NC for peak %d: %s\n", startBlock, err.Error())
 			}
