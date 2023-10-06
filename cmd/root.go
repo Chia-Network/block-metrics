@@ -33,10 +33,10 @@ func Execute() {
 
 func init() {
 	var (
-		lookbackWindow int
-		rpcPerPage     int
-		chiaHostname   string
-		metricsPort    int
+		lookbackWindow          int
+		rpcPerPage              int
+		chiaHostname            string
+		metricsPort             int
 		adjustedIgnoreAddresses []string
 
 		dbHost string
