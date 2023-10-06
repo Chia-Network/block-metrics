@@ -37,6 +37,7 @@ func init() {
 		rpcPerPage     int
 		chiaHostname   string
 		metricsPort    int
+		adjustedIgnoreAddresses []string
 
 		dbHost string
 		dbPort int
@@ -53,6 +54,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&chiaHostname, "chia-hostname", "localhost", "The hostname to use when connecting to chia")
 	// We'll just use 9914 (same as chia-exporter) for now as a default, since they likely won't run on the same hosts
 	rootCmd.PersistentFlags().IntVar(&metricsPort, "metrics-port", 9914, "The port the metrics server binds to")
+	rootCmd.PersistentFlags().StringSliceVar(&adjustedIgnoreAddresses, "adjusted-ignore-addresses", []string{}, "Addresses to ignore when calculating the adjusted NC figures")
 	rootCmd.PersistentFlags().StringVar(&dbHost, "db-host", "127.0.0.1", "Host or IP address of the DB instance to connect to")
 	rootCmd.PersistentFlags().IntVar(&dbPort, "db-port", 3306, "Port of the database")
 	rootCmd.PersistentFlags().StringVar(&dbUser, "db-user", "root", "The username to use when connecting to the DB")
@@ -63,6 +65,7 @@ func init() {
 	cobra.CheckErr(viper.BindPFlag("rpc-per-page", rootCmd.PersistentFlags().Lookup("rpc-per-page")))
 	cobra.CheckErr(viper.BindPFlag("chia-hostname", rootCmd.PersistentFlags().Lookup("chia-hostname")))
 	cobra.CheckErr(viper.BindPFlag("metrics-port", rootCmd.PersistentFlags().Lookup("metrics-port")))
+	cobra.CheckErr(viper.BindPFlag("adjusted-ignore-addresses", rootCmd.PersistentFlags().Lookup("adjusted-ignore-addresses")))
 	cobra.CheckErr(viper.BindPFlag("db-host", rootCmd.PersistentFlags().Lookup("db-host")))
 	cobra.CheckErr(viper.BindPFlag("db-port", rootCmd.PersistentFlags().Lookup("db-port")))
 	cobra.CheckErr(viper.BindPFlag("db-user", rootCmd.PersistentFlags().Lookup("db-user")))
