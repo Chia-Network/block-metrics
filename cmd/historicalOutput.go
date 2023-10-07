@@ -43,7 +43,7 @@ var historicalOutputCmd = &cobra.Command{
 		writer := csv.NewWriter(file)
 		defer writer.Flush()
 
-		err = writer.Write([]string{"height", "date", "nc50", "nc51"})
+		err = writer.Write([]string{"height", "date", "nc50", "nc51", "nc50adj", "nc51adj"})
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
@@ -70,12 +70,23 @@ var historicalOutputCmd = &cobra.Command{
 				log.Printf("Error calculating 51%% NC for peak %d: %s\n", startBlock, err.Error())
 			}
 
+			nc50adj, err := mets.CalculateNakamoto(startBlock, 50, viper.GetStringSlice("adjusted-ignore-addresses"))
+			if err != nil {
+				log.Printf("Error calculating adjusted 50%% NC for peak %d: %s\n", startBlock, err.Error())
+			}
+			nc51adj, err := mets.CalculateNakamoto(startBlock, 51, viper.GetStringSlice("adjusted-ignore-addresses"))
+			if err != nil {
+				log.Printf("Error calculating adjusted 51%% NC for peak %d: %s\n", startBlock, err.Error())
+			}
+
 			timestamp := mets.GetNonTXBlockTimestamp(startBlock)
 			err = writer.Write([]string{
 				fmt.Sprintf("%d", startBlock),
 				timestamp.String,
 				fmt.Sprintf("%d", nc50),
 				fmt.Sprintf("%d", nc51),
+				fmt.Sprintf("%d", nc50adj),
+				fmt.Sprintf("%d", nc51adj),
 			})
 			if err != nil {
 				log.Fatalln(err.Error())
