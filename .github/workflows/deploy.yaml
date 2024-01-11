@@ -44,11 +44,11 @@ jobs:
             secret/data/fmt/mysql1/users/blocks-write-user password | DB_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
-            secret/data/fmt/k8s/fremont-baremetal api_server_url | K8S_API_SERVER_URL;
-            secret/data/fmt/k8s/fremont-baremetal private_crt | PRIVATE_CRT;
-            secret/data/fmt/k8s/fremont-baremetal private_key | PRIVATE_KEY;
-            secret/data/fmt/k8s/fremont-baremetal public_crt | PUBLIC_CRT;
-            secret/data/fmt/k8s/fremont-baremetal public_key | PUBLIC_KEY;
+            secret/data/fmt/k8s/k0s-internal api_server_url | K8S_API_SERVER_URL;
+            secret/data/fmt/k8s/k0s-internal private_crt | PRIVATE_CRT;
+            secret/data/fmt/k8s/k0s-internal private_key | PRIVATE_KEY;
+            secret/data/fmt/k8s/k0s-internal public_crt | PUBLIC_CRT;
+            secret/data/fmt/k8s/k0s-internal public_key | PUBLIC_KEY;
 
       - name: Get config.yaml
         run: |
@@ -62,7 +62,7 @@ jobs:
         with:
           vault_url: ${{ secrets.VAULT_URL }}
           vault_token: ${{ env.VAULT_TOKEN }}
-          backend_name: fremont-baremetal
+          backend_name: k0s-internal
           role_name: github-actions
           cluster_url: ${{ env.K8S_API_SERVER_URL }}
 
