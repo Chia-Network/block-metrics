@@ -49,4 +49,53 @@ The database current has a single `blocks` table with the following fields:
 
 ## Installation / Usage
 
+`make build` will build the app and put the resulting binary in `bin/block-metrics`. The app needs a MySQL database to
+store the block information within.
 
+### Configuration Flags
+
+The following configuration flags are available. These can be passed as flags at runtime, set in a yml file at
+`~/.block-metrics.yaml`, or set as env vars prefixed with `BLOCK_METRICS_`, converting `-` to `_`, and all upper case.
+
+`adjusted-ignore-addresses` is a list of addresses to ignore in the adjusted NC metric
+
+`chia-hostname` The hostname to use to connect to the full node (default `localhost`)
+
+`db-host` The hostname or IP address for the mysql server
+
+`db-name` The name of the database in MySQL to store the block metrics data in
+
+`db-password` The password for the database
+
+`db-port` The port for the database (default 3306)
+
+`db-user` The username to use when connecting to the DB
+
+`lookback-window` How many blocks to look at when calculating the nakamoto coefficient (Default 32256)
+
+`metrics-port` The port to run the prometheus metrics server on
+
+`rpc-per-page` How many results to fetch in each RPC call when backfilling block information
+
+### Commands
+
+#### Serve
+
+`block-metrics serve`
+
+The primary way to run the app is the `serve` command. This connects to the chia full node and listen for new blocks
+and adds them to the database. Each time a block is finished processing, the metrics are recalculated. 
+
+#### Backfill Blocks
+
+`block-metrics backfill-blocks [--delete-first]`
+
+This command backfills missing data from the full node into the database. If the `--delete-first` flag is used, the
+contents in the table will be deleted before reimporting.
+
+#### Historical Output
+
+`block-metrics historical-output [--interval 100]`
+
+Generates a `history.csv` file with historical nakamoto coefficient data every <interval> blocks, based on the data
+present in the database. To export a full history of the chain, you must first backfill all missing blocks. 
