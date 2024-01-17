@@ -1,5 +1,7 @@
 # Block Metrics
 
+Adding a simple change to test PR docker build rules.
+
 This repo connects to a chia full node and maintains a MySQL database with some metadata about blocks which can then be
 used to query and generate block metrics. Additionally, the metrics are exported via a prometheus compatible `/metrics`
 endpoint.
