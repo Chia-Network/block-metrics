@@ -40,8 +40,8 @@ jobs:
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
             secret/data/fmt/mysql/db-info host | DB_HOST;
-            secret/data/fmt/mysql/users/blocks-metrics username | DB_USER;
-            secret/data/fmt/mysql/users/blocks-metrics password | DB_PASSWORD;
+            secret/data/fmt/mysql/users/block-metrics username | DB_USER;
+            secret/data/fmt/mysql/users/block-metrics password | DB_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/fmt/k8s/fmt-k8s-internal api_server_url | K8S_API_SERVER_URL;
