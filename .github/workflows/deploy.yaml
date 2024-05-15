@@ -39,9 +39,9 @@ jobs:
           url: ${{ secrets.VAULT_URL }}
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
-            secret/data/fmt/mysql1/db-info host | DB_HOST;
-            secret/data/fmt/mysql1/users/blocks-write-user username | DB_USER;
-            secret/data/fmt/mysql1/users/blocks-write-user password | DB_PASSWORD;
+            secret/data/fmt/mysql/db-info host | DB_HOST;
+            secret/data/fmt/mysql/users/blocks-write username | DB_USER;
+            secret/data/fmt/mysql/users/blocks-write password | DB_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/fmt/k8s/fmt-k8s-internal api_server_url | K8S_API_SERVER_URL;
