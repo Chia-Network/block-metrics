@@ -17,7 +17,7 @@ func (m *Metrics) OpenWebsocket() error {
 		return err
 	}
 
-	err = m.websocketClient.AddHandler(m.websocketReceive)
+	_, err = m.websocketClient.AddHandler(m.websocketReceive)
 	if err != nil {
 		return err
 	}
