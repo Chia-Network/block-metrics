@@ -44,11 +44,11 @@ jobs:
             secret/data/fmt/mysql/users/block-metrics password | DB_PASSWORD;
             secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
-            secret/data/fmt/k8s/fmt-k8s-internal api_server_url | K8S_API_SERVER_URL;
-            secret/data/fmt/k8s/fmt-k8s-internal private_crt | PRIVATE_CRT;
-            secret/data/fmt/k8s/fmt-k8s-internal private_key | PRIVATE_KEY;
-            secret/data/fmt/k8s/fmt-k8s-internal public_crt | PUBLIC_CRT;
-            secret/data/fmt/k8s/fmt-k8s-internal public_key | PUBLIC_KEY;
+            secret/data/fmt/k8s/k8s-fmt api_server_url | K8S_API_SERVER_URL;
+            secret/data/fmt/k8s/k8s-fmt private_crt | PRIVATE_CRT;
+            secret/data/fmt/k8s/k8s-fmt private_key | PRIVATE_KEY;
+            secret/data/fmt/k8s/k8s-fmt public_crt | PUBLIC_CRT;
+            secret/data/fmt/k8s/k8s-fmt public_key | PUBLIC_KEY;
 
       - name: Get config.yaml
         run: |
@@ -62,7 +62,7 @@ jobs:
         with:
           vault_url: ${{ secrets.VAULT_URL }}
           vault_token: ${{ env.VAULT_TOKEN }}
-          backend_name: fmt-k8s-internal
+          backend_name: k8s-fmt
           role_name: github-actions
           cluster_url: ${{ env.K8S_API_SERVER_URL }}
 
