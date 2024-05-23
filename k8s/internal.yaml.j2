@@ -53,4 +53,19 @@ secretEnvironment:
   BLOCK_METRICS_DB_HOST: "{{ DB_HOST }}"
   BLOCK_METRICS_DB_USER: "{{ DB_USER }}"
   BLOCK_METRICS_DB_PASSWORD: "{{ DB_PASSWORD }}"
-  BLOCK_METRICS_DB_NAME: "blocks"
+  BLOCK_METRICS_DB_NAME: "blocks-dev"
+
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Egress
+  egressRules:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: chia-blockchain
+      ports:
+        - protocol: TCP
+          port: 8555
+        - protocol: TCP
+          port: 55400
