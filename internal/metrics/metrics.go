@@ -36,7 +36,6 @@ type Metrics struct {
 	dbName string
 
 	websocketClient *rpc.Client
-	httpClient      *rpc.Client
 
 	mysqlClient *sql.DB
 
@@ -74,18 +73,10 @@ func NewMetrics(exporterPort uint16, dbHost string, dbPort uint16, dbUser string
 		fillGapsLock:      &sync.Mutex{},
 	}
 
-	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
+	metrics.websocketClient, err = rpc.NewClient(rpc.ConnectionModeWebsocket, rpc.WithAutoConfig(), rpc.WithSyncWebsocket(), rpc.WithBaseURL(&url.URL{
 		Scheme: "wss",
 		Host:   viper.GetString("chia-hostname"),
 	}))
-	if err != nil {
-		return nil, err
-	}
-
-	metrics.httpClient, err = rpc.NewClient(rpc.ConnectionModeHTTP, rpc.WithAutoConfig(), rpc.WithBaseURL(&url.URL{
-		Scheme: "https",
-		Host:   viper.GetString("chia-hostname"),
-	}), rpc.WithTimeout(60*time.Second))
 	if err != nil {
 		return nil, err
 	}
