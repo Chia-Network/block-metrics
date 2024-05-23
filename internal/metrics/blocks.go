@@ -25,7 +25,7 @@ func (m *Metrics) BackfillBlocks() error {
 	oldestRow := m.mysqlClient.QueryRow("select height from blocks order by height asc limit 1")
 	err := oldestRow.Scan(&oldestHeight)
 	if err != nil {
-		state, _, err := m.httpClient.FullNodeService.GetBlockchainState()
+		state, _, err := m.websocketClient.FullNodeService.GetBlockchainState()
 		if err != nil {
 			log.Fatalf("Error getting blockchain state: %s\n", err.Error())
 		}
@@ -72,7 +72,7 @@ func (m *Metrics) BackfillBlocks() error {
 }
 
 func (m *Metrics) fetchAndSaveBlocksBetween(start, end uint32) error {
-	blocks, _, err := m.httpClient.FullNodeService.GetBlocks(&rpc.GetBlocksOptions{
+	blocks, _, err := m.websocketClient.FullNodeService.GetBlocks(&rpc.GetBlocksOptions{
 		Start:          int(start),
 		End:            int(end),
 		ExcludeReorged: true,
@@ -231,7 +231,7 @@ func (m *Metrics) receiveBlock(resp *types.WebsocketResponse) {
 		log.Printf("Received block %d\n", block.Height)
 
 		// The block event doesn't actually have the full block record, so grab it from the RPC
-		result, _, err := m.httpClient.FullNodeService.GetBlockByHeight(&rpc.GetBlockByHeightOptions{BlockHeight: int(block.Height)})
+		result, _, err := m.websocketClient.FullNodeService.GetBlockByHeight(&rpc.GetBlockByHeightOptions{BlockHeight: int(block.Height)})
 		if err != nil {
 			log.Errorf("Error getting block in response to webhook: %s\n", err.Error())
 			return
