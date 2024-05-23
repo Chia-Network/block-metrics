@@ -61,6 +61,12 @@ networkPolicy:
     - Egress
   egressRules:
     - to:
+        - ipBlock:
+            cidr: "{{ DB_HOST }}/32"
+      ports:
+        - protocol: TCP
+          port: 3306
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: chia-blockchain
