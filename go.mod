@@ -3,13 +3,13 @@ module github.com/chia-network/block-metrics
 go 1.21
 
 require (
-	github.com/chia-network/go-chia-libs v0.8.1
+	github.com/chia-network/go-chia-libs v0.8.2
 	github.com/chia-network/go-modules v0.0.4
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/prometheus/client_golang v1.19.1
 	github.com/schollz/progressbar/v3 v3.14.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/gorilla/websocket v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
