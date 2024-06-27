@@ -112,8 +112,8 @@ jobs:
             secret/data/pub-metrics-eks/rds/rds-info db_host | DB_HOST;
             secret/data/pub-metrics-eks/rds/blocks-write-user username | DB_USER;
             secret/data/pub-metrics-eks/rds/blocks-write-user password | DB_PASSWORD;
-            secret/data/fmt/k8s/ghcr_image_pull username | IMAGE_PULL_USERNAME;
-            secret/data/fmt/k8s/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
+            secret/data/github/ghcr_image_pull username | IMAGE_PULL_USERNAME;
+            secret/data/github/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
             secret/data/pub-metrics-eks/chia-certs private_crt | PRIVATE_CRT;
             secret/data/pub-metrics-eks/chia-certs private_key | PRIVATE_KEY;
             secret/data/pub-metrics-eks/chia-certs public_crt | PUBLIC_CRT;
