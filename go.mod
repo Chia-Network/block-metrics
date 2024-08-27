@@ -6,7 +6,7 @@ require (
 	github.com/chia-network/go-chia-libs v0.8.6
 	github.com/chia-network/go-modules v0.0.5
 	github.com/go-sql-driver/mysql v1.8.1
-	github.com/prometheus/client_golang v1.20.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/schollz/progressbar/v3 v3.14.6
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
