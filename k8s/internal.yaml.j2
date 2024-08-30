@@ -24,7 +24,7 @@ service:
   port: 9914
 
 configmapEnvironment:
-  BLOCK_METRICS_CHIA_HOSTNAME: node-node-daemon.chia-blockchain-mainnet.svc
+  BLOCK_METRICS_CHIA_HOSTNAME: node-node-all.chia-blockchain-mainnet.svc
 
 configmapFile:
   mountPath: "/root"
@@ -71,5 +71,7 @@ networkPolicy:
             matchLabels:
               kubernetes.io/metadata.name: chia-blockchain-mainnet
       ports:
+        - protocol: TCP
+          port: 8555
         - protocol: TCP
           port: 55400
