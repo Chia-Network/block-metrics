@@ -18,12 +18,18 @@ jobs:
     uses: Chia-Network/actions/.github/workflows/docker-build.yaml@main
 
   deploy_internal:
-    name: Deploy Internal
+    name: Deploy Internal - ${{ matrix.colo.region }}
     needs:
       - package
-    runs-on: [k8s-public-fmt]
+    runs-on: "k8s-public-${{ matrix.colo.region }}"
     container:
       image: registry.gitlab.com/cmmarslender/kubectl-helm:v3
+    matrix:
+      colo:
+        - region: fmt
+        - region: msp
+        - region: ldn
+        - region: sin
     steps:
       - uses: actions/checkout@v4
 
@@ -39,16 +45,16 @@ jobs:
           url: ${{ secrets.VAULT_URL }}
           token: ${{ env.VAULT_TOKEN }}
           secrets: |
-            secret/data/fmt/mysql/db-info host | DB_HOST;
-            secret/data/fmt/mysql/users/block-metrics username | DB_USER;
-            secret/data/fmt/mysql/users/block-metrics password | DB_PASSWORD;
+            secret/data/${{ matrix.colo.region }}/mysql/db-info host | DB_HOST;
+            secret/data/${{ matrix.colo.region }}/mysql/users/block-metrics username | DB_USER;
+            secret/data/${{ matrix.colo.region }}/mysql/users/block-metrics password | DB_PASSWORD;
             secret/data/github/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/github/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
-            secret/data/fmt/k8s/k8s-fmt api_server_url | K8S_API_SERVER_URL;
-            secret/data/fmt/k8s/k8s-fmt private_crt | PRIVATE_CRT;
-            secret/data/fmt/k8s/k8s-fmt private_key | PRIVATE_KEY;
-            secret/data/fmt/k8s/k8s-fmt public_crt | PUBLIC_CRT;
-            secret/data/fmt/k8s/k8s-fmt public_key | PUBLIC_KEY;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt api_server_url | K8S_API_SERVER_URL;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt private_crt | PRIVATE_CRT;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt private_key | PRIVATE_KEY;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt public_crt | PUBLIC_CRT;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt public_key | PUBLIC_KEY;
 
       - name: Get config.yaml
         run: |
@@ -62,7 +68,7 @@ jobs:
         with:
           vault_url: ${{ secrets.VAULT_URL }}
           vault_token: ${{ env.VAULT_TOKEN }}
-          backend_name: k8s-fmt
+          backend_name: k8s-${{ matrix.colo.region }}
           role_name: github-actions
           cluster_url: ${{ env.K8S_API_SERVER_URL }}
 
