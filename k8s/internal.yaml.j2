@@ -7,6 +7,7 @@ imagePullSecrets:
 
 deployment:
   containerPort: 9914
+  containerPortName: metrics
   livenessProbe:
     httpGet:
       path: /healthz
@@ -19,7 +20,7 @@ deployment:
 service:
   enabled: true
   additionalLabels:
-    prometheus: http
+    prometheus: "chia-metrics"
     application: block-metrics
   port: 9914
 
