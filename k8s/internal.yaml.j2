@@ -11,11 +11,11 @@ deployment:
   livenessProbe:
     httpGet:
       path: /healthz
-      port: http
+      port: metrics
   readinessProbe:
     httpGet:
       path: /healthz
-      port: http
+      port: metrics
 
 service:
   enabled: true
