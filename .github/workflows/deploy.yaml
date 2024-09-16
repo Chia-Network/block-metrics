@@ -50,11 +50,11 @@ jobs:
             secret/data/${{ matrix.colo.region }}/mysql/users/block-metrics password | DB_PASSWORD;
             secret/data/github/ghcr_image_pull username | IMAGE_PULL_USERNAME;
             secret/data/github/ghcr_image_pull password | IMAGE_PULL_PASSWORD;
-            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt api_server_url | K8S_API_SERVER_URL;
-            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt private_crt | PRIVATE_CRT;
-            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt private_key | PRIVATE_KEY;
-            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt public_crt | PUBLIC_CRT;
-            secret/data/${{ matrix.colo.region }}/k8s/k8s-fmt public_key | PUBLIC_KEY;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-${{ matrix.colo.region }} api_server_url | K8S_API_SERVER_URL;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-${{ matrix.colo.region }} private_crt | PRIVATE_CRT;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-${{ matrix.colo.region }} private_key | PRIVATE_KEY;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-${{ matrix.colo.region }} public_crt | PUBLIC_CRT;
+            secret/data/${{ matrix.colo.region }}/k8s/k8s-${{ matrix.colo.region }} public_key | PUBLIC_KEY;
 
       - name: Get config.yaml
         run: |
