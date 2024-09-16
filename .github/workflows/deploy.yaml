@@ -24,12 +24,14 @@ jobs:
     runs-on: "k8s-public-${{ matrix.colo.region }}"
     container:
       image: registry.gitlab.com/cmmarslender/kubectl-helm:v3
-    matrix:
-      colo:
-        - region: fmt
-        - region: msp
-        - region: ldn
-        - region: sin
+    strategy:
+      fail-fast: false
+      matrix:
+        colo:
+          - region: fmt
+          - region: msp
+          - region: ldn
+          - region: sin
     steps:
       - uses: actions/checkout@v4
 
