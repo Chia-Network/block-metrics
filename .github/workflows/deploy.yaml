@@ -83,7 +83,7 @@ jobs:
           docker_server: "ghcr.io"
 
       - name: Configure namespace for istio
-        run: kubectl label namespace block-metrics istio-injection=enabled
+        run: kubectl label namespace block-metrics istio-injection=disabled --override
 
       - uses: Chia-Network/actions/helm/deploy@main
         env:
