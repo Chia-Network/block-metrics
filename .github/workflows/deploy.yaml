@@ -82,9 +82,6 @@ jobs:
           password: ${{ env.IMAGE_PULL_PASSWORD }}
           docker_server: "ghcr.io"
 
-      - name: Configure namespace for istio
-        run: kubectl label namespace block-metrics istio-injection=disabled --overwrite
-
       - uses: Chia-Network/actions/helm/deploy@main
         env:
           DOCKER_TAG: "sha-${{ github.sha }}"
