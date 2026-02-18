@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.1
 
 require (
-	github.com/chia-network/go-chia-libs v1.2.2
+	github.com/chia-network/go-chia-libs v1.2.4
 	github.com/chia-network/go-modules v0.1.1
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/prometheus/client_golang v1.23.2
