@@ -28,7 +28,7 @@ configmapEnvironment:
   BLOCK_METRICS_CHIA_HOSTNAME: mainnet-node-all.chia-blockchain-mainnet.svc
 
 configmapFile:
-  mountPath: "/root"
+  mountPath: "/home/nonroot"
   values:
     ".block-metrics.yaml": |-
       adjusted-ignore-addresses:
@@ -37,7 +37,7 @@ configmapFile:
         - "xch178wppppm8pqp9tkalcurclln2q54snvs3estx5fmfhp936pzdajszh83t9"
 
 secretFile:
-  mountPath: /root/.chia/mainnet/config
+  mountPath: /home/nonroot/.chia/mainnet/config
   stringValues:
     config.yaml: |
       {{ CONFIG_YAML | indent(6, False) }}
