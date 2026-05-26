@@ -13,6 +13,9 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: build-deploy
+
 jobs:
   package:
     uses: Chia-Network/actions/.github/workflows/docker-build.yaml@main
